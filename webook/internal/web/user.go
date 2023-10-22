@@ -78,6 +78,10 @@ func (h *UserHandler) SignUP(ctx *gin.Context) {
 		ctx.String(http.StatusOK, "邮箱格式不对")
 		return
 	}
+	if req.Password != req.ConfirmPassword {
+		ctx.String(http.StatusOK, "两次输入密码不一致")
+		return
+	}
 	isPassword, err := h.passwordRexExp.MatchString(req.Password)
 	if err != nil {
 		ctx.String(http.StatusOK, "系统错误")
@@ -112,7 +116,7 @@ func (h *UserHandler) Login(ctx *gin.Context) {
 		Password string `json:"password"`
 	}
 	var req Req
-	if err := ctx.Bind(req); err != nil {
+	if err := ctx.Bind(&req); err != nil {
 		return
 	}
 	u, err := h.svc.Login(ctx, req.Email, req.Password)
@@ -124,12 +128,12 @@ func (h *UserHandler) Login(ctx *gin.Context) {
 			MaxAge: 900, // 十五分钟
 			//HttpOnly: true,
 		})
-		err := sess.Save()
+		err = sess.Save()
 		if err != nil {
 			ctx.String(http.StatusOK, "系统错误")
 			return
 		}
-		ctx.String(http.StatusOK, "登陆成功")
+		ctx.String(http.StatusOK, "登录成功")
 	case service.ErrInvalidUserOrPassword:
 		ctx.String(http.StatusOK, "用户名或密码错误")
 	default:
@@ -140,5 +144,5 @@ func (h *UserHandler) Edit(ctx *gin.Context) {
 
 }
 func (h *UserHandler) Profile(ctx *gin.Context) {
-	ctx.String(http.StatusOK, "这是profile")
+	ctx.String(http.StatusOK, "这是 profile")
 }
