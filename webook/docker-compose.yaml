@@ -1,0 +1,15 @@
+# 我这个docker compose 由几个服务组成
+version: "3.8"
+services:
+  mysql8:
+    image: mysql:8.0
+    restart: always
+    command: --default-authentication-plugin=mysql_native_password
+    environment:
+      MYSQL_ROOT_PASSWORD: root
+    volumes:
+      # 设置初始化脚本
+      - ./script/mysql/:/docker-entrypoint-initdb.d/
+    ports:
+      # 外部访问用13306
+      - "13306:3306"
