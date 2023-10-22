@@ -91,10 +91,7 @@ func (h *UserHandler) SignUP(ctx *gin.Context) {
 		ctx.String(http.StatusOK, "密码格式不对, 必须包含大小写字母和数字的组合，可以使用特殊字符，长度在8-16之间")
 		return
 	}
-	if req.Password != req.ConfirmPassword {
-		ctx.String(http.StatusOK, "两次密码不一致")
-		return
-	}
+
 	err = h.svc.Signup(ctx, domain.User{
 		Email:    req.Email,
 		Password: req.Password,
