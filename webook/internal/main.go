@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"github.com/gin-contrib/cors"
 	"github.com/gin-contrib/sessions"
-	"github.com/gin-contrib/sessions/cookie"
+	"github.com/gin-contrib/sessions/redis"
 	"github.com/gin-gonic/gin"
 	"github.com/sgy111222333/basic-go/webook/internal/repository"
 	"github.com/sgy111222333/basic-go/webook/internal/repository/dao"
@@ -73,9 +73,17 @@ func initWebServer() *gin.Engine {
 
 	login := &middleware.LoginMiddlewareBuilder{}
 	// 存储数据的, 也就是你 userId 存在哪里; 目前直接存cookie里面(不安全)
-	store := cookie.NewStore([]byte("secret"))
+	//store := cookie.NewStore([]byte("secret"))
+	//store = memstore.NewStore([]byte("jXhyXxLsp2fqQ2TDz42RKMfpkvtJYEQd"), []byte("RbQ3vwLWk6HHRK5auSL8m6TfdsJkgWJz"))
+	store, err := redis.NewStore(16, "tcp", "127.0.0.1:16379", "",
+		[]byte("jXhyXxLsp2fqQ2TDz42RKMfpkvtJYEQd"), // Authentication 身份认证
+		[]byte("RbQ3vwLWk6HHRK5auSL8m6TfdsJkgWJz")) // Encryption 数据加密
+	if err != nil {
+		panic(err)
+	}
 	//可以User无数次, 每次可以加若干个middleware, 也就是gin.HandlerFunc
 	server.Use(sessions.Sessions("ssid", store), login.CheckLogin())
-	// sessions.Sessions("ssid", store) 是初始化session
+	// sessions.Sessions("ssid", store) 是初始化session, store是存session的地方, 可以是cookie、memstore、redis、mysql等
+	// 可以传入不同store的原因是: Session传入的是interface, 这就是面向接口编程的好处
 	return server
 }

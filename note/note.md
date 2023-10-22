@@ -36,3 +36,12 @@ domain是什么?
 Gin的Session插件使用分两步
 - 在middleware里接入, 会帮忙从Cookie里拿到SessionId, 再根据SessionId找到Session
 - 拿到Session之后就可以为所欲为了, 比如校验是否登陆
+
+# JWT
+
+- Header: 元数据, 描述这个token本身, 是一个json对象
+- Payload: 数据内容, 是一个json对象
+- Signature: 签名, 根据Header和Payload生成
+- 
+![img.png](img.png)
+
