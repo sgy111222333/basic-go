@@ -56,8 +56,9 @@ func initWebServer() *gin.Engine {
 	// CORS
 	server.Use(cors.New(cors.Config{
 		AllowCredentials: true,
-		AllowHeaders:     []string{"Content-Type"},
-		AllowOrigins:     []string{"http://127.0.0.1:3000", "http://localhost:3000"},
+		AllowHeaders:     []string{"Content-Type", "Authorization"},
+		AllowOrigins:     []string{"http://127.0.0.1:3000"},
+		ExposeHeaders:    []string{"x-jwt-token"}, // 允许前端访问我的某个header
 		//AllowAllOrigins: true, //等价于上面的域名写成"*", 但如果前端引用者策略是strict-origin-when-cross-origin, *不管用
 		AllowOriginFunc: func(origin string) bool {
 			//	允许包含localhost和youzu的域名访问
@@ -70,7 +71,16 @@ func initWebServer() *gin.Engine {
 	}), func(context *gin.Context) {
 		fmt.Println("这是第二个middleware")
 	})
+	useJWT(server)
+	//useSession(server)
+	return server
+}
+func useJWT(server *gin.Engine) {
+	login := &middleware.LoginJWTMiddlewareBuilder{}
+	server.Use(login.CheckLogin())
 
+}
+func useSession(server *gin.Engine) {
 	login := &middleware.LoginMiddlewareBuilder{}
 	// 存储数据的, 也就是你 userId 存在哪里; 目前直接存cookie里面(不安全)
 	//store := cookie.NewStore([]byte("secret"))
@@ -85,5 +95,4 @@ func initWebServer() *gin.Engine {
 	server.Use(sessions.Sessions("ssid", store), login.CheckLogin())
 	// sessions.Sessions("ssid", store) 是初始化session, store是存session的地方, 可以是cookie、memstore、redis、mysql等
 	// 可以传入不同store的原因是: Session传入的是interface, 这就是面向接口编程的好处
-	return server
 }

@@ -5,9 +5,11 @@ import (
 	regexp "github.com/dlclark/regexp2"
 	"github.com/gin-contrib/sessions"
 	"github.com/gin-gonic/gin"
+	"github.com/golang-jwt/jwt/v5"
 	"github.com/sgy111222333/basic-go/webook/internal/domain"
 	"github.com/sgy111222333/basic-go/webook/internal/service"
 	"net/http"
+	"time"
 )
 
 const (
@@ -49,7 +51,8 @@ func (h *UserHandler) RegisterRoutes(server *gin.Engine) {
 	// 分组路由
 	ug := server.Group("/users") // 把users拼在前面
 	ug.POST("/signup", h.SignUP)
-	ug.POST("/login", h.Login)
+	//ug.POST("/login", h.Login)
+	ug.POST("/login", h.LoginJWT)
 	ug.POST("/edit", h.Edit)
 	ug.GET("/profile", h.Profile)
 }
@@ -106,7 +109,38 @@ func (h *UserHandler) SignUP(ctx *gin.Context) {
 		ctx.String(http.StatusOK, "系统错误")
 	}
 }
-
+func (h *UserHandler) LoginJWT(ctx *gin.Context) {
+	type Req struct {
+		Email    string `json:"email"`
+		Password string `json:"password"`
+	}
+	var req Req
+	if err := ctx.Bind(&req); err != nil {
+		return
+	}
+	u, err := h.svc.Login(ctx, req.Email, req.Password)
+	switch err {
+	case nil:
+		uc :=
+			UserClaims{
+				Uid: u.Id,
+				RegisteredClaims: jwt.RegisteredClaims{
+					ExpiresAt: jwt.NewNumericDate(time.Now().Add(time.Minute * 1)), // 1分钟登录过期
+				},
+			}
+		token := jwt.NewWithClaims(jwt.SigningMethodHS512, uc)
+		tokenStr, err := token.SignedString(JWTKey)
+		if err != nil {
+			ctx.String(http.StatusOK, "系统错误")
+		}
+		ctx.Header("x-jwt-token", tokenStr)
+		ctx.String(http.StatusOK, "登录成功")
+	case service.ErrInvalidUserOrPassword:
+		ctx.String(http.StatusOK, "用户名或密码错误")
+	default:
+		ctx.String(http.StatusOK, "系统错误")
+	}
+}
 func (h *UserHandler) Login(ctx *gin.Context) {
 	type Req struct {
 		Email    string `json:"email"`
@@ -141,5 +175,13 @@ func (h *UserHandler) Edit(ctx *gin.Context) {
 
 }
 func (h *UserHandler) Profile(ctx *gin.Context) {
+	//uc := ctx.MustGet("user").(UserClaims)
 	ctx.String(http.StatusOK, "这是 profile")
+}
+
+var JWTKey = []byte("7tY76KDM3z6P2jWykvNt7eRaX7AYqRmR")
+
+type UserClaims struct {
+	jwt.RegisteredClaims // 组合
+	Uid                  int64
 }

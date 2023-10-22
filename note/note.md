@@ -44,4 +44,5 @@ Gin的Session插件使用分两步
 - Signature: 签名, 根据Header和Payload生成
 - 
 ![img.png](img.png)
-
+![img_1.png](img_1.png)
+![img_2.png](img_2.png)
