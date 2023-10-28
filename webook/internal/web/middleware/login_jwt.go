@@ -48,6 +48,11 @@ func (m *LoginJWTMiddlewareBuilder) CheckLogin() gin.HandlerFunc {
 			ctx.AbortWithStatus(http.StatusUnauthorized)
 			return
 		}
+		if uc.UserAgent != ctx.GetHeader("User-Agent") {
+			// 用户的浏览器变了, 后期监控的时候, 这里要埋点  浏览器指纹比user-agent好用
+			ctx.AbortWithStatus(http.StatusUnauthorized)
+			return
+		}
 
 		expireTime, err := uc.GetExpirationTime()
 		//if expireTime.Before(time.Now()){ // 这样判定也可以

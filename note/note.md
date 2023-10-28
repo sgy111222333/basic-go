@@ -46,3 +46,19 @@ Gin的Session插件使用分两步
 ![img.png](img.png)
 ![img_1.png](img_1.png)
 ![img_2.png](img_2.png)
+
+# 限流
+
+![img_3.png](img_3.png)
+![img_4.png](img_4.png)
+
+# kubectl
+![img_5.png](img_5.png)
+![img_8.png](img_8.png)
+
+
+# Ingress 和 Ingress controller
+![img_9.png](img_9.png)
+Ingress 是配置
+Ingress controller 是配置的执行者
+

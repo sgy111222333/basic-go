@@ -4,15 +4,19 @@ import (
 	"fmt"
 	"github.com/gin-contrib/cors"
 	"github.com/gin-contrib/sessions"
-	"github.com/gin-contrib/sessions/redis"
+	"github.com/gin-contrib/sessions/cookie"
 	"github.com/gin-gonic/gin"
+	"github.com/redis/go-redis/v9"
+	"github.com/sgy111222333/basic-go/webook/config"
 	"github.com/sgy111222333/basic-go/webook/internal/repository"
 	"github.com/sgy111222333/basic-go/webook/internal/repository/dao"
 	"github.com/sgy111222333/basic-go/webook/internal/service"
 	"github.com/sgy111222333/basic-go/webook/internal/web"
 	"github.com/sgy111222333/basic-go/webook/internal/web/middleware"
+	ratelimit "github.com/sgy111222333/basic-go/webook/pkg/ginx/middlerware/ratelimite"
 	"gorm.io/driver/mysql"
 	"gorm.io/gorm"
+	"net/http"
 	"strings"
 	"time"
 )
@@ -21,6 +25,11 @@ func main() {
 	db := initDB()
 	server := initWebServer()
 	initUserHdl(db, server)
+	//server := gin.Default()
+	server.GET("/hello", func(ctx *gin.Context) {
+		ctx.String(http.StatusOK, "hello, 启动成功")
+
+	})
 	server.Run(":8080")
 }
 
@@ -39,7 +48,8 @@ func initUserHdl(db *gorm.DB, server *gin.Engine) {
 // server.Use(传入一个接收*Context的方法)  // 这个方法就是HandlerFunc
 
 func initDB() *gorm.DB {
-	db, err := gorm.Open(mysql.Open("root:root@tcp(localhost:13306)/webook?charset=utf8mb4"), &gorm.Config{})
+	//db, err := gorm.Open(mysql.Open("root:root@tcp(localhost:13306)/webook?charset=utf8mb4"), &gorm.Config{})
+	db, err := gorm.Open(mysql.Open(config.Config.DB.DSN), &gorm.Config{})
 	if err != nil {
 		panic(err)
 	}
@@ -71,6 +81,12 @@ func initWebServer() *gin.Engine {
 	}), func(context *gin.Context) {
 		fmt.Println("这是第二个middleware")
 	})
+	// 限流插件
+	redisClient := redis.NewClient(&redis.Options{
+		Addr: config.Config.Redis.Addr,
+	})
+	server.Use(ratelimit.NewBuilder(redisClient, time.Second*1, 1).Build())
+
 	useJWT(server)
 	//useSession(server)
 	return server
@@ -83,14 +99,14 @@ func useJWT(server *gin.Engine) {
 func useSession(server *gin.Engine) {
 	login := &middleware.LoginMiddlewareBuilder{}
 	// 存储数据的, 也就是你 userId 存在哪里; 目前直接存cookie里面(不安全)
-	//store := cookie.NewStore([]byte("secret"))
+	store := cookie.NewStore([]byte("secret"))
 	//store = memstore.NewStore([]byte("jXhyXxLsp2fqQ2TDz42RKMfpkvtJYEQd"), []byte("RbQ3vwLWk6HHRK5auSL8m6TfdsJkgWJz"))
-	store, err := redis.NewStore(16, "tcp", "127.0.0.1:16379", "",
-		[]byte("jXhyXxLsp2fqQ2TDz42RKMfpkvtJYEQd"), // Authentication 身份认证
-		[]byte("RbQ3vwLWk6HHRK5auSL8m6TfdsJkgWJz")) // Encryption 数据加密
-	if err != nil {
-		panic(err)
-	}
+	//store, err := redis.NewStore(16, "tcp", "127.0.0.1:16379", "",
+	//	[]byte("jXhyXxLsp2fqQ2TDz42RKMfpkvtJYEQd"), // Authentication 身份认证
+	//	[]byte("RbQ3vwLWk6HHRK5auSL8m6TfdsJkgWJz")) // Encryption 数据加密
+	//if err != nil {
+	//	panic(err)
+	//}
 	//可以User无数次, 每次可以加若干个middleware, 也就是gin.HandlerFunc
 	server.Use(sessions.Sessions("ssid", store), login.CheckLogin())
 	// sessions.Sessions("ssid", store) 是初始化session, store是存session的地方, 可以是cookie、memstore、redis、mysql等

@@ -125,8 +125,9 @@ func (h *UserHandler) LoginJWT(ctx *gin.Context) {
 			UserClaims{
 				Uid: u.Id,
 				RegisteredClaims: jwt.RegisteredClaims{
-					ExpiresAt: jwt.NewNumericDate(time.Now().Add(time.Minute * 1)), // 1分钟登录过期
+					ExpiresAt: jwt.NewNumericDate(time.Now().Add(time.Minute * 1)), // 1分钟登录 过期
 				},
+				UserAgent: ctx.GetHeader("User-Agent"),
 			}
 		token := jwt.NewWithClaims(jwt.SigningMethodHS512, uc)
 		tokenStr, err := token.SignedString(JWTKey)
@@ -184,4 +185,5 @@ var JWTKey = []byte("7tY76KDM3z6P2jWykvNt7eRaX7AYqRmR")
 type UserClaims struct {
 	jwt.RegisteredClaims // 组合
 	Uid                  int64
+	UserAgent            string
 }
