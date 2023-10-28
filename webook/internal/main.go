@@ -28,7 +28,6 @@ func main() {
 	//server := gin.Default()
 	server.GET("/hello", func(ctx *gin.Context) {
 		ctx.String(http.StatusOK, "hello, 启动成功")
-
 	})
 	server.Run(":8080")
 }
@@ -67,9 +66,9 @@ func initWebServer() *gin.Engine {
 	server.Use(cors.New(cors.Config{
 		AllowCredentials: true,
 		AllowHeaders:     []string{"Content-Type", "Authorization"},
-		AllowOrigins:     []string{"http://127.0.0.1:3000"},
+		AllowOrigins:     []string{"http://127.0.0.1:3000", "http://192.168.6.155:3000"},
 		ExposeHeaders:    []string{"x-jwt-token"}, // 允许前端访问我的某个header
-		//AllowAllOrigins: true, //等价于上面的域名写成"*", 但如果前端引用者策略是strict-origin-when-cross-origin, *不管用
+		//AllowAllOrigins:  true,                    //等价于上面的域名写成"*", 但如果前端引用者策略是strict-origin-when-cross-origin, *不管用
 		AllowOriginFunc: func(origin string) bool {
 			//	允许包含localhost和youzu的域名访问
 			if strings.Contains(origin, "localhost") {

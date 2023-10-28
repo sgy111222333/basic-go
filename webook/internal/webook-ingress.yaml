@@ -15,7 +15,7 @@ spec:
             backend:
               service:
                 # * 与service的名字对应
-                name: webook
+                name: webook-app-service
                 port:
                   number: 80
                 
