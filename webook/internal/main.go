@@ -29,7 +29,7 @@ func main() {
 	server.GET("/hello", func(ctx *gin.Context) {
 		ctx.String(http.StatusOK, "hello, 启动成功")
 	})
-	server.Run(":8080")
+	server.Run(":8081")
 }
 
 func initUserHdl(db *gorm.DB, server *gin.Engine) {

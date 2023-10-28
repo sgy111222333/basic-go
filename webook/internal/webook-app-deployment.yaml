@@ -3,7 +3,7 @@ kind: Deployment
 metadata:
   name: webook-app
 spec:
-  replicas: 3
+  replicas: 2
   selector:
     matchLabels:
       app: webook-app
@@ -19,4 +19,4 @@ spec:
         - name: webook-app
           image: sgy111222333/webook:v0.0.1
           ports:
-            - containerPort: 8080
+            - containerPort: 8081

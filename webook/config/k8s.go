@@ -8,6 +8,6 @@ var Config = config{
 		DSN: "root:root@tcp(webook-mysql-service:3308)/webook?charset=utf8mb4",
 	},
 	Redis: RedisConfig{
-		Addr: "webook-redis-service:6379",
+		Addr: "webook-redis-service:6380",
 	},
 }
