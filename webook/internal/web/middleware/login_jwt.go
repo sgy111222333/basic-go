@@ -49,11 +49,12 @@ func (m *LoginJWTMiddlewareBuilder) CheckLogin() gin.HandlerFunc {
 			ctx.AbortWithStatus(http.StatusUnauthorized)
 			return
 		}
-		if uc.UserAgent != ctx.GetHeader("User-Agent") {
-			// 用户的浏览器变了, 后期监控的时候, 这里要埋点  浏览器指纹比user-agent好用
-			ctx.AbortWithStatus(http.StatusUnauthorized)
-			return
-		}
+		// 压测时关闭
+		//if uc.UserAgent != ctx.GetHeader("User-Agent") {
+		//	// 用户的浏览器变了, 后期监控的时候, 这里要埋点  浏览器指纹比user-agent好用
+		//	ctx.AbortWithStatus(http.StatusUnauthorized)
+		//	return
+		//}
 
 		//if uc.UserAgent != ctx.GetHeader("User-Agent") {
 		// 后期我们讲到了监控告警的时候，这个地方要埋点
