@@ -80,11 +80,11 @@ func initWebServer() *gin.Engine {
 	}), func(context *gin.Context) {
 		fmt.Println("这是第二个middleware")
 	})
-	// 限流插件
+	// * 限流插件, 压测时关闭或调大rate
 	redisClient := redis.NewClient(&redis.Options{
 		Addr: config.Config.Redis.Addr,
 	})
-	server.Use(ratelimit.NewBuilder(redisClient, time.Second*1, 1).Build())
+	server.Use(ratelimit.NewBuilder(redisClient, time.Second*1, 99999).Build())
 
 	useJWT(server)
 	//useSession(server)
