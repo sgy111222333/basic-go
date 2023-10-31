@@ -2,8 +2,8 @@ import axios from "axios";
 
 const instance = axios.create({
     // 这边记得修改你对应的配置文件
-    // baseURL: "http://192.168.6.155:80",
-    baseURL: "http://172.16.210.86:80",
+    baseURL: "http://192.168.6.155:8080",
+    // baseURL: "http://172.16.210.86:80",
     withCredentials: true
 })
 

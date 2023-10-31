@@ -35,8 +35,8 @@ func NewUserHandler(svc *service.UserService) *UserHandler {
 }
 
 /*
-	集中注册: 在main就能看到所有路由, 且在git里容易冲突
-	分散注册: 一类handler一个文件, 更有条理
+集中注册: 在main就能看到所有路由, 且在git里容易冲突
+分散注册: 一类handler一个文件, 更有条理
 */
 func (h *UserHandler) RegisterRoutes(server *gin.Engine) {
 	// REST 风格
@@ -177,7 +177,31 @@ func (h *UserHandler) Edit(ctx *gin.Context) {
 }
 func (h *UserHandler) Profile(ctx *gin.Context) {
 	//uc := ctx.MustGet("user").(UserClaims)
-	ctx.String(http.StatusOK, "这是 profile")
+	//ctx.String(http.StatusOK, "这是 profile")
+	uc, ok := ctx.MustGet("user").(UserClaims)
+	if !ok {
+		//ctx.String(http.StatusOK, "系统错误")
+		println("这里不对")
+		ctx.AbortWithStatus(http.StatusUnauthorized)
+		return
+	}
+	u, err := h.svc.FindById(ctx, uc.Uid)
+	if err != nil {
+		ctx.String(http.StatusOK, "系统异常")
+		return
+	}
+	type User struct {
+		Nickname string `json:"nickname"`
+		Email    string `json:"email"`
+		AboutMe  string `json:"aboutMe"`
+		Birthday string `json:"birthday"`
+	}
+	ctx.JSON(http.StatusOK, User{
+		Nickname: u.Nickname,
+		Email:    u.Email,
+		AboutMe:  u.AboutMe,
+		Birthday: u.Birthday.Format(time.DateOnly),
+	})
 }
 
 var JWTKey = []byte("7tY76KDM3z6P2jWykvNt7eRaX7AYqRmR")

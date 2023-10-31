@@ -3,7 +3,9 @@ package repository
 import (
 	"context"
 	"github.com/sgy111222333/basic-go/webook/internal/domain"
+	"github.com/sgy111222333/basic-go/webook/internal/repository/cache"
 	"github.com/sgy111222333/basic-go/webook/internal/repository/dao"
+	"time"
 )
 
 var (
@@ -12,7 +14,8 @@ var (
 )
 
 type UserRepository struct {
-	dao *dao.UserDAO
+	dao   *dao.UserDAO
+	cache *cache.UserCache
 }
 
 func NewUserRepository(dao *dao.UserDAO) *UserRepository {
@@ -41,5 +44,31 @@ func (repo *UserRepository) toDomain(u dao.User) domain.User {
 		Id:       u.Id,
 		Email:    u.Email,
 		Password: u.Password,
+		AboutMe:  u.AboutMe,
+		Nickname: u.Nickname,
+		Birthday: time.UnixMilli(u.Birthday),
 	}
+}
+
+func (repo *UserRepository) toEntity(u domain.User) dao.User {
+	return dao.User{
+		Id:       u.Id,
+		Email:    u.Email,
+		Password: u.Password,
+		Birthday: u.Birthday.UnixMilli(),
+		AboutMe:  u.AboutMe,
+		Nickname: u.Nickname,
+	}
+}
+func (repo *UserRepository) UpdateNonZeroFields(ctx context.Context,
+	user domain.User) error {
+	return repo.dao.UpdateById(ctx, repo.toEntity(user))
+}
+
+func (repo *UserRepository) FindById(ctx context.Context, uid int64) (domain.User, error) {
+	u, err := repo.dao.FindById(ctx, uid)
+	if err != nil {
+		return domain.User{}, err
+	}
+	return repo.toDomain(u), nil
 }

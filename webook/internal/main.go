@@ -6,12 +6,14 @@ import (
 	"github.com/gin-contrib/sessions"
 	"github.com/gin-contrib/sessions/cookie"
 	"github.com/gin-gonic/gin"
+	"github.com/redis/go-redis/v9"
 	"github.com/sgy111222333/basic-go/webook/config"
 	"github.com/sgy111222333/basic-go/webook/internal/repository"
 	"github.com/sgy111222333/basic-go/webook/internal/repository/dao"
 	"github.com/sgy111222333/basic-go/webook/internal/service"
 	"github.com/sgy111222333/basic-go/webook/internal/web"
 	"github.com/sgy111222333/basic-go/webook/internal/web/middleware"
+	ratelimit "github.com/sgy111222333/basic-go/webook/pkg/ginx/middlerware/ratelimite"
 	"gorm.io/driver/mysql"
 	"gorm.io/gorm"
 	"net/http"
@@ -79,10 +81,10 @@ func initWebServer() *gin.Engine {
 		fmt.Println("这是第二个middleware")
 	})
 	// * 限流插件, 压测时关闭或调大rate
-	//redisClient := redis.NewClient(&redis.Options{
-	//	Addr: config.Config.Redis.Addr,
-	//})
-	//server.Use(ratelimit.NewBuilder(redisClient, time.Second*1, 100).Build())
+	redisClient := redis.NewClient(&redis.Options{
+		Addr: config.Config.Redis.Addr,
+	})
+	server.Use(ratelimit.NewBuilder(redisClient, time.Second*1, 100).Build())
 
 	useJWT(server)
 	//useSession(server)
