@@ -36,7 +36,7 @@ func (m *LoginMiddlewareBuilder) CheckLogin() gin.HandlerFunc {
 			sess.Set(updateTimeKey, time.Now())
 			sess.Set("userId", userID)
 			err := sess.Save()
-			if err == nil {
+			if err != nil {
 				// 打印日志即可, 因为不影响业务
 				fmt.Println(err)
 			}
