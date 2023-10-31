@@ -122,11 +122,11 @@ func (h *UserHandler) LoginJWT(ctx *gin.Context) {
 	switch err {
 	case nil:
 		uc := UserClaims{
-			Uid: u.Id,
+			Uid:       u.Id,
+			UserAgent: ctx.GetHeader("User-Agent"),
 			RegisteredClaims: jwt.RegisteredClaims{
 				ExpiresAt: jwt.NewNumericDate(time.Now().Add(time.Minute * 30)), // 1分钟登录 过期
 			},
-			UserAgent: ctx.GetHeader("User-Agent"),
 		}
 		token := jwt.NewWithClaims(jwt.SigningMethodHS512, uc)
 		tokenStr, err := token.SignedString(JWTKey)
@@ -172,7 +172,44 @@ func (h *UserHandler) Login(ctx *gin.Context) {
 	}
 }
 func (h *UserHandler) Edit(ctx *gin.Context) {
-
+	// 嵌入一段刷新过期时间的代码
+	type Req struct {
+		// 改邮箱，密码，或者能不能改手机号
+		Nickname string `json:"nickname"`
+		// YYYY-MM-DD
+		Birthday string `json:"birthday"`
+		AboutMe  string `json:"aboutMe"`
+	}
+	var req Req
+	if err := ctx.Bind(&req); err != nil {
+		return
+	}
+	//sess := sessions.Default(ctx)
+	//sess.Get("uid")
+	uc, ok := ctx.MustGet("user").(UserClaims)
+	if !ok {
+		//ctx.String(http.StatusOK, "系统错误")
+		ctx.AbortWithStatus(http.StatusUnauthorized)
+		return
+	}
+	// 用户输入不对
+	birthday, err := time.Parse(time.DateOnly, req.Birthday)
+	if err != nil {
+		//ctx.String(http.StatusOK, "系统错误")
+		ctx.String(http.StatusOK, "生日格式不对")
+		return
+	}
+	err = h.svc.UpdateNonSensitiveInfo(ctx, domain.User{
+		Id:       uc.Uid,
+		Nickname: req.Nickname,
+		Birthday: birthday,
+		AboutMe:  req.AboutMe,
+	})
+	if err != nil {
+		ctx.String(http.StatusOK, "系统异常")
+		return
+	}
+	ctx.String(http.StatusOK, "更新成功")
 }
 func (h *UserHandler) Profile(ctx *gin.Context) {
 	//uc := ctx.MustGet("user").(UserClaims)
