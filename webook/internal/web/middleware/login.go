@@ -27,13 +27,14 @@ func (m *LoginMiddlewareBuilder) CheckLogin() gin.HandlerFunc {
 			ctx.AbortWithStatus(http.StatusUnauthorized)
 			return
 		}
+		now := time.Now()
 		// 我怎么知道要刷新登录状态的session了呢?
 		const updateTimeKey = "update_time"
 		val := sess.Get(updateTimeKey)
 		lastUpdateTime, ok := val.(time.Time) // 断言val的类型是time.Time
-		if val == nil || !ok || time.Now().Sub(lastUpdateTime) > time.Second*10 {
+		if val == nil || !ok || now.Sub(lastUpdateTime) > time.Second*10 {
 			// 如果第一次进来 || val的类型不对 || 距离上次刷新超过十秒, 把时间存进去
-			sess.Set(updateTimeKey, time.Now())
+			sess.Set(updateTimeKey, now)
 			sess.Set("userId", userID)
 			err := sess.Save()
 			if err != nil {
