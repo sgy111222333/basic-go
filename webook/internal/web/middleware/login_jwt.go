@@ -17,59 +17,62 @@ func (m *LoginJWTMiddlewareBuilder) CheckLogin() gin.HandlerFunc {
 	return func(ctx *gin.Context) {
 		path := ctx.Request.URL.Path
 		if path == "/users/signup" || path == "/users/login" {
+			// 不需要登录校验
 			return
 		}
-		// 根据约定, 从前端拿到的token在Authorization里
-		// Bearer xxxxxx.xxxxxx.xxxxxx 的形式, 需要切割
+		// 根据约定，token 在 Authorization 头部
+		// Bearer XXXX
 		authCode := ctx.GetHeader("Authorization")
 		if authCode == "" {
-			// 没登录, 没token
+			// 没登录，没有 token, Authorization 这个头部都没有
 			ctx.AbortWithStatus(http.StatusUnauthorized)
 			return
 		}
 		segs := strings.Split(authCode, " ")
 		if len(segs) != 2 {
-			// 切割结果不对, 说明Authorization有问题
+			// 没登录，Authorization 中的内容是乱传的
 			ctx.AbortWithStatus(http.StatusUnauthorized)
 			return
 		}
 		tokenStr := segs[1]
 		var uc web.UserClaims
 		token, err := jwt.ParseWithClaims(tokenStr, &uc, func(token *jwt.Token) (interface{}, error) {
-			return web.JWTKey, nil // 这里返回的是固定的key, 也可以根据路径等内容计算一个动态的key
+			return web.JWTKey, nil
 		})
 		if err != nil {
-			// token无效
+			// token 不对，token 是伪造的
 			ctx.AbortWithStatus(http.StatusUnauthorized)
 			return
 		}
-		if !token.Valid {
-			// token非法或者过期
+		if token == nil || !token.Valid {
+			// token 解析出来了，但是 token 可能是非法的，或者过期了的
 			ctx.AbortWithStatus(http.StatusUnauthorized)
 			return
 		}
-		// 压测时关闭
+
 		//if uc.UserAgent != ctx.GetHeader("User-Agent") {
-		//	// 用户的浏览器变了, 后期监控的时候, 这里要埋点  浏览器指纹比user-agent好用
+		// 后期我们讲到了监控告警的时候，这个地方要埋点
+		// 能够进来这个分支的，大概率是攻击者
 		//	ctx.AbortWithStatus(http.StatusUnauthorized)
 		//	return
 		//}
 
-		expireTime, err := uc.GetExpirationTime()
-		//if expireTime.Before(time.Now()){ // 这样判定也可以
-		//	//token过期
+		expireTime := uc.ExpiresAt
+		// 不判定都可以
+		//if expireTime.Before(time.Now()) {
 		//	ctx.AbortWithStatus(http.StatusUnauthorized)
 		//	return
 		//}
-		// 剩余过期时间小于20s就要刷新
-		if expireTime.Sub(time.Now()) < time.Minute*5 {
-			uc.ExpiresAt = jwt.NewNumericDate(time.Now().Add(time.Minute * 30)) // 增加30分钟的过期时间
-			newToken, err := token.SignedString(web.JWTKey)
+		// 剩余过期时间 < 50s 就要刷新
+		if expireTime.Sub(time.Now()) < time.Second*50 {
+			uc.ExpiresAt = jwt.NewNumericDate(time.Now().Add(time.Minute * 30))
+			tokenStr, err = token.SignedString(web.JWTKey)
+			ctx.Header("x-jwt-token", tokenStr)
 			if err != nil {
+				// 这边不要中断，因为仅仅是过期时间没有刷新，但是用户是登录了的
 				log.Println(err)
 			}
-			ctx.Header("x-jwt-token", newToken)
 		}
-		//ctx.Set("user", uc)
+		ctx.Set("user", uc)
 	}
 }
