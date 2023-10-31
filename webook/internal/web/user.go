@@ -40,24 +40,24 @@ func NewUserHandler(svc *service.UserService) *UserHandler {
 */
 func (h *UserHandler) RegisterRoutes(server *gin.Engine) {
 	// REST 风格
-	//server.POST("user",h.SignUP())
-	//server.POST("/user", h.SignUP())
-	//server.GET("/user/:id", h.SignUP())
+	//server.POST("user",h.SignUp())
+	//server.POST("/user", h.SignUp())
+	//server.GET("/user/:id", h.SignUp())
 	// 未使用分组路由
-	//server.POST("/users/signup", h.SignUP)
+	//server.POST("/users/signup", h.SignUp)
 	//server.POST("/users/login", h.Login)
 	//server.POST("/users/edit", h.Edit)
 	//server.GET("/users/profile", h.Profile)
 	// 分组路由
 	ug := server.Group("/users") // 把users拼在前面
-	ug.POST("/signup", h.SignUP)
+	ug.POST("/signup", h.SignUp)
 	//ug.POST("/login", h.Login)
 	ug.POST("/login", h.LoginJWT)
 	ug.POST("/edit", h.Edit)
 	ug.GET("/profile", h.Profile)
 }
 
-func (h *UserHandler) SignUP(ctx *gin.Context) {
+func (h *UserHandler) SignUp(ctx *gin.Context) {
 	// 也可以把结构体放到方法外面, 但不是最小范围了
 	type SignUpReq struct {
 		Email           string `json:"email"` // 这个叫标签
