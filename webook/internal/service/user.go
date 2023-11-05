@@ -9,7 +9,7 @@ import (
 )
 
 var (
-	ErrDuplicateEmail        = repository.ErrDuplicateEmail
+	ErrDuplicateEmail        = repository.ErrDuplicateUser
 	ErrInvalidUserOrPassword = errors.New("用户或密码错误")
 )
 
@@ -47,13 +47,35 @@ func (svc *UserService) Login(ctx context.Context, email string, password string
 	}
 	return u, nil
 }
-func (svc *UserService) UpdateNonSensitiveInfo(ctx context.Context,
-	user domain.User) error {
+
+func (svc *UserService) UpdateNonSensitiveInfo(ctx context.Context, user domain.User) error {
 	// UpdateNicknameAndXXAnd
 	return svc.repo.UpdateNonZeroFields(ctx, user)
 }
 
-func (svc *UserService) FindById(ctx context.Context,
-	uid int64) (domain.User, error) {
+func (svc *UserService) FindById(ctx context.Context, uid int64) (domain.User, error) {
 	return svc.repo.FindById(ctx, uid)
+}
+
+func (svc *UserService) FindOrCreate(ctx context.Context, phone string) (domain.User, error) {
+	// 先找一下, 默认大部分用户是已存在的用户
+	u, err := svc.repo.FindByPhone(ctx, phone)
+	if err != repository.ErrUserNotFound {
+		// 两种情况:
+		// 1. err == nil, 说明u是可用的
+		// 2. err != nil, 系统错误
+		return u, err
+	}
+	// 如果没找到用户; 注册
+	err = svc.repo.Create(ctx, domain.User{
+		Phone: phone,
+	})
+	// 判定注册是否成功
+	// err != nil, 系统错误; 唯一索引冲突, 该用户已注册
+	if err != nil && err != repository.ErrDuplicateUser {
+		return domain.User{}, err
+	}
+	// 到这里 要么err==nil; 要么ErrDuplicateUser, 可以把用户找出来
+	// 如果数据库有主从延迟, 理论上应该强制走主库
+	return svc.repo.FindByPhone(ctx, phone)
 }

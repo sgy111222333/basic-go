@@ -9,6 +9,7 @@ import (
 	"github.com/redis/go-redis/v9"
 	"github.com/sgy111222333/basic-go/webook/config"
 	"github.com/sgy111222333/basic-go/webook/internal/repository"
+	"github.com/sgy111222333/basic-go/webook/internal/repository/cache"
 	"github.com/sgy111222333/basic-go/webook/internal/repository/dao"
 	"github.com/sgy111222333/basic-go/webook/internal/service"
 	"github.com/sgy111222333/basic-go/webook/internal/web"
@@ -23,8 +24,12 @@ import (
 
 func main() {
 	db := initDB()
+	redisClient := redis.NewClient(&redis.Options{
+		Addr: config.Config.Redis.Addr,
+	})
+	codeSvc := initCodeSvc(redisClient)
 	server := initWebServer()
-	initUserHdl(db, server)
+	initUserHdl(db, redisClient, codeSvc, server)
 	//server := gin.Default()
 	server.GET("/hello", func(ctx *gin.Context) {
 		ctx.String(http.StatusOK, "hello, 启动成功")
@@ -32,11 +37,12 @@ func main() {
 	server.Run(":8080")
 }
 
-func initUserHdl(db *gorm.DB, server *gin.Engine) {
+func initUserHdl(db *gorm.DB, redisClient redis.Cmdable, codeSvc *service.CodeService, server *gin.Engine) {
 	ud := dao.NewUserDAO(db)
-	ur := repository.NewUserRepository(ud)
+	uc := cache.NewUserCache(redisClient)
+	ur := repository.NewUserRepository(ud, uc)
 	us := service.NewUserService(ur)
-	hdl := web.NewUserHandler(us)
+	hdl := web.NewUserHandler(us, codeSvc)
 	hdl.RegisterRoutes(server)
 }
 
@@ -58,6 +64,11 @@ func initDB() *gorm.DB {
 		return nil
 	}
 	return db
+}
+func initCodeSvc(redisClient redis.Cmdable) *service.CodeService {
+	cc := cache.NewCodeCache(redisClient)
+	crepo := repository.NewCodeRepository(cc)
+	return service.NewCodeService(crepo, nil)
 }
 
 func initWebServer() *gin.Engine {

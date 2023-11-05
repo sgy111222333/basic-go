@@ -9,6 +9,7 @@ type User struct {
 	Nickname string
 	Birthday time.Time
 	AboutMe  string
+	Phone    string
 	// 一律用UTC+0的时区, 只在返回给前端展示的时候转成对应时区
 	Ctime time.Time
 }

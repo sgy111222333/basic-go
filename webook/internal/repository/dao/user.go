@@ -2,6 +2,7 @@ package dao
 
 import (
 	"context"
+	"database/sql"
 	"errors"
 	"github.com/go-sql-driver/mysql"
 	"gorm.io/gorm"
@@ -64,11 +65,19 @@ func (dao *UserDAO) FindById(ctx context.Context, uid int64) (User, error) {
 	return res, err
 }
 
+func (dao *UserDAO) FindByPhone(ctx context.Context, phone string) (User, error) {
+	var res User
+	err := dao.db.WithContext(ctx).Where("phone = ?", phone).First(&res).Error
+	return res, err
+}
+
 // User dao里面操作的不是domain.User, 而是定义了一个新的类型,
 // 因为domain.User是业务概念, 不一定和实时监控中表或者列完全对得上, 而dao.User则是直接映射到表里面.
 type User struct {
-	Id       int64  `gorm:"primaryKey,autoIncrement"`
-	Email    string `gorm:"unique"`
+	Id int64 `gorm:"primaryKey,autoIncrement"`
+	// 代表这两列可以为空
+	Email    sql.NullString `gorm:"unique"`
+	Phone    sql.NullString `gorm:"unique"`
 	Password string
 
 	Nickname string `gorm:"type=varchar(128)"`

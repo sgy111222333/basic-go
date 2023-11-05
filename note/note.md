@@ -62,3 +62,8 @@ Gin的Session插件使用分两步
 Ingress 是配置
 Ingress controller 是配置的执行者
 
+# Redis 的序列化与反序列化
+![img_10.png](img_10.png)
+
+# 短信验证码
+![img_11.png](img_11.png)
