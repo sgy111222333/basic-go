@@ -7,6 +7,7 @@ services:
     command: --default-authentication-plugin=mysql_native_password
     environment:
       MYSQL_ROOT_PASSWORD: root
+      MYSQL_DATABASE: webook  # 指定要创建的数据库名称
     ports:
       # 外部访问用13306
       - "13306:3306"

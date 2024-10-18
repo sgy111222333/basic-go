@@ -67,3 +67,8 @@ Ingress controller 是配置的执行者
 
 # 短信验证码
 ![img_11.png](img_11.png)
+
+# 依赖注入
+![img_12.png](img_12.png)
+![img_13.png](img_13.png)
+依赖注入将初始化挪到了main函数, 由main函数进行组装

@@ -44,6 +44,7 @@ func (s *Service) Send(ctx context.Context, tplId string, args []string, number 
 	return nil
 }
 
+// toPtrSlice 把[]string类型转为[]*string类型
 func (s *Service) toPtrSlice(data []string) []*string {
 	return slice.Map[string, *string](data,
 		func(idx int, src string) *string {
@@ -53,9 +54,7 @@ func (s *Service) toPtrSlice(data []string) []*string {
 
 func NewService(client *sms.Client, appId string, signName string) *Service {
 	return &Service{
-		client: client,
-		//appId:     ekit.ToPtr[string](appId),
-		//signature: ekit.ToPtr[string](signature),
+		client:   client,
 		appId:    &appId,
 		signName: &signName,
 	}
