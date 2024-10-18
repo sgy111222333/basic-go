@@ -72,3 +72,12 @@ Ingress controller 是配置的执行者
 ![img_12.png](img_12.png)
 ![img_13.png](img_13.png)
 依赖注入将初始化挪到了main函数, 由main函数进行组装
+
+
+# mock使用过程
+```mockgen -source=./webook/internal/service/user.go -package=svcmocks -destination=./webook/internal/service/mocks/user.mock.go```
+source: 接口所在的文件
+destination: 生成代码的目标路径
+package: 生成代码的包名
+记得在项目根目录下运行
+![img_14.png](img_14.png)
